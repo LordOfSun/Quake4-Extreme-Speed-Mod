@@ -1347,6 +1347,12 @@ idPlayer::idPlayer() {
 	prevOnGround = true;
 	clientIdealWeaponPredictFrame = -1;
 	serverReceiveEvent = false;
+	
+	playerSpeed = 200;	//RC
+	speedIncrease = 0;	//RC
+	curWeaponFire = -1; //RC 1 - Shotgun, 2 - Rocket Launcher, 3 - Railgun, 4 - Nailgun, 5 - Machinegun, 6 - Lightning Gun, 7 - Hyperblaster, 8 - Grenade Launcher
+	railSpeedDebuff = false;	//RC
+	nailDebuff = 0;		//RC
 }
 
 /*
@@ -2838,7 +2844,7 @@ void idPlayer::SpawnToPoint( const idVec3 &spawn_origin, const idAngles &spawn_a
 	if ( health > inventory.maxHealth ) {
 		nextHealthPulse = gameLocal.time + HEALTH_PULSE;
 	}
-	
+
 	if ( inventory.armor > inventory.maxarmor ) {
 		nextArmorPulse = gameLocal.time + ARMOR_PULSE;
 	}		
@@ -4379,6 +4385,7 @@ idPlayer::PowerUpModifier
 */
 float idPlayer::PowerUpModifier( int type ) {
 	float mod = 1.0f;
+	idEntity* ent = NULL;			//RC
 
 	if ( PowerUpActive( POWERUP_QUADDAMAGE ) ) {
 		switch( type ) {
@@ -4395,6 +4402,18 @@ float idPlayer::PowerUpModifier( int type ) {
 				break;
 			}
 		}
+		mod = 1.0f;												//RC
+		for ( int i = 0; i < gameLocal.numClients; i++ ) {		//RC
+			ent = gameLocal.entities[ i ];						//RC	
+			if ( !ent || !ent->IsType( idPlayer::GetClassType() ) ) //RC
+			{
+				continue;
+			}
+			if(static_cast<idPlayer*>(ent) != this)				//RC
+			{
+				static_cast<idPlayer*>(ent)->speedIncrease = 0;		//RC
+			}
+		}
 	}
 
 	if ( PowerUpActive( POWERUP_HASTE ) ) {
@@ -4407,6 +4426,9 @@ float idPlayer::PowerUpModifier( int type ) {
 				mod *= 0.7f;
 				break;
 		}
+		mod = 1.0f;												//RC
+		speedIncrease = 4*playerSpeed;							//RC
+		
 	}
 
 	// Arena CTF powerups
@@ -4928,7 +4950,7 @@ void idPlayer::UpdatePowerUps( void ) {
 	if ( p && ( p->spectating && p->spectator == entityNumber || !p->spectating && p->entityNumber == entityNumber ) ) {
 		playWearoffSound = true;
 	}
-
+	
 	for ( i = 0; i < POWERUP_MAX; i++ ) {
 		// Do we have this powerup?
 		if ( !(inventory.powerups & ( 1 << i ) ) ) {
@@ -4936,7 +4958,7 @@ void idPlayer::UpdatePowerUps( void ) {
 		}
 			
 		if ( inventory.powerupEndTime[i] > gameLocal.time || inventory.powerupEndTime[i] == -1 ) {
-			// If there is still time remaining on the powerup then update the hud		
+			// If there is still time remaining on the powerup then up2222222date the hud		
 			if ( playWearoffSound ) {
 				// Play the wearoff sound for the powerup that is closest to wearing off
 				if ( ( wearoff == -1 || inventory.powerupEndTime[i] < inventory.powerupEndTime[wearoff] ) && inventory.powerupEndTime[i] != -1 ) {
@@ -4953,7 +4975,6 @@ void idPlayer::UpdatePowerUps( void ) {
 			ClearPowerup( i );
 		}
 	}
-
 	// PLay wear off sound?
 	if ( gameLocal.isNewFrame && wearoff != -1 ) {
 		if ( (inventory.powerupEndTime[wearoff] - gameLocal.time) < POWERUP_BLINKS * POWERUP_BLINK_TIME ) {
@@ -4962,7 +4983,7 @@ void idPlayer::UpdatePowerUps( void ) {
 			}
 		}
 	}
-
+	
 	// Reneration regnerates faster when less than maxHealth and can regenerate up to maxHealth * 2
 	if ( gameLocal.time > nextHealthPulse ) {
 // RITUAL BEGIN
@@ -8709,6 +8730,20 @@ void idPlayer::AdjustSpeed( void ) {
 		speed *= 0.33f;
 	}
 
+	if(speedIncrease+playerSpeed > 5*playerSpeed){	//RC
+		speedIncrease = 4*playerSpeed;				//RC
+	}
+	else if(speedIncrease < 0){						//RC
+		speedIncrease = 0;							//RC
+	}
+	
+	if(railSpeedDebuff){							//RC
+		speed = playerSpeed+(int)(speedIncrease/2);	//RC
+	}
+	else{
+		speed = playerSpeed+speedIncrease;			//RC
+	}
+
 	physicsObj.SetSpeed( speed, pm_crouchspeed.GetFloat() );
 }
 
@@ -9944,6 +9979,12 @@ void idPlayer::Killed( idEntity *inflictor, idEntity *attacker, int damage, cons
 	aiManager.RemoveTeammate( this );
 	
 	isChatting = false;
+
+	speedIncrease = 0;	//RC
+	curWeaponFire = -1;	//RC
+	railSpeedDebuff = false; //RC
+	nailDebuff = 0;	//RC
+	
 }
 
 /*
@@ -10070,7 +10111,7 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
  	float		attackerPushScale;
 
 	float modifiedDamageScale = damageScale;
-	
+
 	if ( !gameLocal.isMultiplayer ) {
 		if ( inflictor != gameLocal.world ) {
 			modifiedDamageScale *= ( 1.0f + gameLocal.GetDifficultyModifier() );
@@ -10132,7 +10173,7 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 		lightningEffects = 0;
 		lightningNextTime = gameLocal.GetTime();
 	}
-
+	
 	// We pass in damageScale, because this function calculates a modified damageScale 
 	// based on g_skill, and we don't want to compensate for skill level twice.
 	CalcDamagePoints( inflictor, attacker, &damageDef->dict, damageScale, location, &damage, &armorSave );
@@ -10206,6 +10247,55 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 			attacker = inflictor;
 		}
 
+		if(inflictor && attacker && (attacker != this)){	//RC
+			if(static_cast<const idPlayer*>(attacker)->curWeaponFire == 1)	//RC - Shotgun
+			{
+				damage = damage+((int)(static_cast<const idPlayer*>(attacker)->speedIncrease / 4));
+			}
+			else if(static_cast<const idPlayer*>(attacker)->curWeaponFire == 2)	//RC - Rocket Launcher
+			{
+				//DO NOTHING
+			}
+			else if(static_cast<const idPlayer*>(attacker)->curWeaponFire == 3)	//RC - Railgun
+			{
+				this->railSpeedDebuff = true;	//RC
+				static_cast<idPlayer*>(attacker)->railSpeedDebuff = false;	//RC
+			}
+			else if(static_cast<const idPlayer*>(attacker)->curWeaponFire == 4)	//RC - Nailgun
+			{
+				if(this->nailDebuff < 30 && this->nailDebuff >= 0)			//RC
+				{
+					this->nailDebuff++;										//RC
+					if(static_cast<idPlayer*>(attacker)->nailDebuff > 0)	//RC
+					{
+						static_cast<idPlayer*>(attacker)->nailDebuff--;		//RC
+					}
+				}
+				else if(this->nailDebuff >= 30)								//RC
+				{
+					damage = 999;											//RC
+				}
+			}
+			else if(static_cast<const idPlayer*>(attacker)->curWeaponFire == 5)	//RC - Machinegun
+			{
+				static_cast<idPlayer*>(attacker)->speedIncrease+=10;	//RC
+			}
+			else if(static_cast<const idPlayer*>(attacker)->curWeaponFire == 6)	//RC - Lightning Gun
+			{
+				static_cast<idPlayer*>(attacker)->speedIncrease += 5;	//RC
+				this->speedIncrease -= 5;	//RC
+			}
+			else if(static_cast<const idPlayer*>(attacker)->curWeaponFire == 7)	//RC - Hyperblaster
+			{
+				static_cast<idPlayer*>(attacker)->speedIncrease -= 10;	//RC
+				this->speedIncrease += 10;	//RC
+			}
+			else if(static_cast<const idPlayer*>(attacker)->curWeaponFire == 8)	//RC - Grenade Launcher
+			{
+				this->speedIncrease -= 50;	//RC
+			}
+			
+		}
 		statManager->Damage( attacker, this, methodOfDeath, damage );
 	}
 		

@@ -424,6 +424,8 @@ public:
 // squirrel: Mode-agnostic buymenus
 	float					buyMenuCash;
 // RITUAL END
+	int						playerSpeed;	//RC
+	int						speedMulti;		//RC
 
 public:
 	CLASS_PROTOTYPE( idPlayer );

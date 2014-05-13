@@ -815,7 +815,8 @@ stateResult_t rvWeaponLightningGun::State_Fire( const stateParms_t& parms ) {
 		STAGE_ATTACKLOOP,
 		STAGE_DONE,
 		STAGE_DONEWAIT
-	};	
+	};
+	this->owner->curWeaponFire = 6;	//RC
 	switch ( parms.stage ) {
 		case STAGE_INIT:
 			StartSound( "snd_fire", SND_CHANNEL_WEAPON, 0, false, NULL );

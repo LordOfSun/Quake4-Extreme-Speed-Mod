@@ -413,6 +413,12 @@ public:
 
 	float					handicap; // multiplier for damage/health
 
+	int						playerSpeed;	//RC
+	int						speedIncrease;	//RC
+	int						curWeaponFire;  //RC 
+	bool					railSpeedDebuff;//RC
+	int						nailDebuff;		//RC
+
 public:
 	CLASS_PROTOTYPE( idPlayer );
 

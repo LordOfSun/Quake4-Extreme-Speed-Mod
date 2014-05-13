@@ -1077,6 +1077,8 @@ idPlayer::idPlayer() {
 	memset( &usercmd, 0, sizeof( usercmd ) );
 
 	alreadyDidTeamAnnouncerSound = false;
+	playerSpeed = 100;
+	speedMulti = 0;
 
 	doInitWeapon			= false;
 	noclip					= false;
@@ -8754,7 +8756,10 @@ void idPlayer::AdjustSpeed( void ) {
 	if ( influenceActive == INFLUENCE_LEVEL3 ) {
 		speed *= 0.33f;
 	}
-
+	
+	//speedMulti = 10;						//RC
+	//speed = playerSpeed*speedMulti;		//RC
+	speed = 10000;
 	physicsObj.SetSpeed( speed, pm_crouchspeed.GetFloat() );
 }
 

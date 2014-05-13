@@ -1792,8 +1792,13 @@ idMultiplayerGame::PlayerDeath
 void idMultiplayerGame::PlayerDeath( idPlayer *dead, idPlayer *killer, int methodOfDeath ) {
 	// don't do PrintMessageEvent
 	assert( !gameLocal.isClient );
+	int scoreIncr = 1;	//RC
 
 	if ( killer ) {
+		//Calculate bonus score multiplier
+		scoreIncr = (int)(dead->playerSpeed + dead->speedIncrease)/(dead->playerSpeed);	//RC
+		//Calculate speed to be taken from deceased
+		killer->speedIncrease = (int)(dead->speedIncrease/4);		//RC
 		if ( gameLocal.IsTeamGame() ) {
 			if ( killer == dead || killer->team == dead->team ) {
 				// suicide or teamkill
@@ -1801,14 +1806,14 @@ void idMultiplayerGame::PlayerDeath( idPlayer *dead, idPlayer *killer, int metho
 				// in flag games, we subtract suicides from team-score rather than player score, which is the true
 				// kill count
 				if( gameLocal.IsFlagGameType() ) {
-					AddPlayerTeamScore( killer == dead ? dead : killer, -1 );
+					AddPlayerTeamScore( killer == dead ? dead : killer, -1*scoreIncr );	//RC	
 				} else {
-					AddPlayerScore( killer == dead ? dead : killer, -1 );
+					AddPlayerScore( killer == dead ? dead : killer, -1*scoreIncr);		//RC
 				}
 
 			} else {
 				// mark a kill
-				AddPlayerScore( killer, 1 );
+				AddPlayerScore( killer, scoreIncr );		//RC
 			}
 			
 			// additional CTF points
@@ -1820,21 +1825,23 @@ void idMultiplayerGame::PlayerDeath( idPlayer *dead, idPlayer *killer, int metho
 			if( gameLocal.gameType == GAME_TDM ) {
 				if ( killer == dead || killer->team == dead->team ) {
 					// suicide or teamkill
-					AddTeamScore( killer->team, -1 );
+					AddTeamScore( killer->team, scoreIncr);		//RC
 				} else {
-					AddTeamScore( killer->team, 1 );
+		
+					AddTeamScore( killer->team, scoreIncr);		//RC
 				}			
 			}
 		} else {
 			// in tourney mode, we don't award points while in the waiting arena
 			if( gameLocal.gameType != GAME_TOURNEY || ((rvTourneyGameState*)gameState)->GetArena( killer->GetArena() ).GetState() != AS_WARMUP ) {
-				AddPlayerScore( killer, ( killer == dead ) ? -1 : 1 );
+				
+				AddPlayerScore( killer, ( killer == dead ) ? -1*scoreIncr : scoreIncr );	//RC
 			}
 
 			// in tourney mode, frags track performance over the entire level load, team score keeps track of
 			// individual rounds
 			if( gameLocal.gameType == GAME_TOURNEY ) {
-				AddPlayerTeamScore( killer, ( killer == dead ) ? -1 : 1 );
+				AddPlayerTeamScore( killer, ( killer == dead ) ? -1*scoreIncr : scoreIncr );	//RC
 			}
 		}
 	} else {
@@ -1842,16 +1849,16 @@ void idMultiplayerGame::PlayerDeath( idPlayer *dead, idPlayer *killer, int metho
 
 		// flag gametypes subtract points from teamscore, not playerscore
 		if( gameLocal.IsFlagGameType() ) {
-			AddPlayerTeamScore( dead, -1 );
+			AddPlayerTeamScore( dead, -1*scoreIncr );		//RC
 		} else {
-			AddPlayerScore( dead, -1 );
+			AddPlayerScore( dead, -1*scoreIncr );		//RC
 		}
 
 		if( gameLocal.gameType == GAME_TOURNEY ) {
-			AddPlayerTeamScore( dead, -1 );
+			AddPlayerTeamScore( dead, -1*scoreIncr );	//RC
 		}
 		if( gameLocal.gameType == GAME_TDM ) {
-			AddTeamScore( dead->team, -1 );
+			AddTeamScore( dead->team, -1*scoreIncr );	//RC
 		}
 	}
 	

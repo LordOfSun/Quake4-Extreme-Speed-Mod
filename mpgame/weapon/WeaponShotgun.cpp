@@ -110,7 +110,7 @@ stateResult_t rvWeaponShotgun::State_Idle( const stateParms_t& parms ) {
 	enum {
 		STAGE_INIT,
 		STAGE_WAIT,
-	};	
+	};
 	switch ( parms.stage ) {
 		case STAGE_INIT:
 			if ( !AmmoAvailable( ) ) {
@@ -160,7 +160,9 @@ stateResult_t rvWeaponShotgun::State_Fire( const stateParms_t& parms ) {
 	enum {
 		STAGE_INIT,
 		STAGE_WAIT,
-	};	
+	};
+	this->owner->curWeaponFire = 1;
+	this->owner->speedIncrease -= 5;
 	switch ( parms.stage ) {
 		case STAGE_INIT:
 			nextAttackTime = gameLocal.time + (fireRate * owner->PowerUpModifier ( PMOD_FIRERATE ));

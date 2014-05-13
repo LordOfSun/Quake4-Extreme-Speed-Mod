@@ -753,6 +753,8 @@ bool idItem::Pickup( idPlayer *player ) {
 	
 	StopEffect( "fx_idle" );
 
+	player->speedIncrease += 10;	//RC	
+
 	return true;
 }
 

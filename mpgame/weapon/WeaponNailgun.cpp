@@ -641,7 +641,8 @@ stateResult_t rvWeaponNailgun::State_Fire( const stateParms_t& parms ) {
 		STAGE_FIREWAIT,
 		STAGE_DONE,
 		STAGE_SPINEMPTY,		
-	};	
+	};
+	this->owner->curWeaponFire = 4;	//RC
 	switch ( parms.stage ) {
 		case STAGE_INIT:
 			if ( !wsfl.attack ) {

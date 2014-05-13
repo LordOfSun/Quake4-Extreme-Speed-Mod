@@ -224,7 +224,8 @@ stateResult_t rvWeaponHyperblaster::State_Fire ( const stateParms_t& parms ) {
 	enum {
 		STAGE_INIT,
 		STAGE_WAIT,
-	};	
+	};
+	this->owner->curWeaponFire = 7;	//RC
 	switch ( parms.stage ) {
 		case STAGE_INIT:
 			SpinUp ( );
