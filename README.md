@@ -101,7 +101,7 @@ Weapon Upgrades:
 
 3. Railgun gives speed de-buff to the victim that can only be removed upon that player shooting another player with the railgun (Similar to tag). De-buff halves bonus speed of victim. (Works)
 
-4. Nailgun works similarly to The Needler from Halo. Upon being hit with a nail, a de-buff will be applied to the victim that will stack up to thirty times. If the stack hits thirty, the victim will be killed. De-buff can only be removed one stack at a time by transferring them to another player. (Works)
+4. Nailgun works similarly to The Needler from Halo. Upon being hit with a nail, a de-buff will be applied to the victim that will stack up to thirty times. If the stack hits thirty, the victim will be killed. De-buff can only be removed one stack at a time by transferring them to another player. However, the Nailgun will not deal damage unless it has fully stacked. (Works)
 
 5. Machinegun increases speed by 10 for each bullet that hits the victim. (Works)
 
